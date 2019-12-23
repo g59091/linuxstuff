@@ -1,5 +1,5 @@
-alias ahelp='echo "avl cmds: bat, c, cpuget, d, datenow, e, 
-ipget, memget, randpass, sag, sagu, svrtst, timenow, 
+alias ahelp='echo "extra cmds: bat, c, cpuget, d, datenow, e, 
+fld, ipget, memget, randpass, sag, sagu, svrtst, timenow, 
 untar, ziphelp. ahelp for this message again."'
 alias bat='upower -i /org/freedesktop/UPower/devices/battery_BAT1| grep -E "state|to\ full|percentage"'
 alias c='clear'
@@ -7,6 +7,7 @@ alias cpuget='lscpu'
 alias d='ls -aF'
 alias datenow='echo "The date is now: "; date +"%A, %B %d %Y."'
 alias e='exit'
+alias fld='pcmanfm'
 alias ipget='curl ipinfo.io/ip'
 alias memget='free -m -l -t'
 alias randpass='openssl rand -base64 12'
