@@ -1,0 +1,20 @@
+#!/bin/bash
+
+DISK_SPACE=""
+DISK_PERC=""
+
+disk(){
+  TMP_VAR=$(df -B 1024 / | tr -s " " | cut -d" " -f 2-3 | tail -n -1 | awk '{ t = $1; $1 = $2; $2 = t; printf("%.2fGiB", $1 / 1048576); printf(" %.1f%%", ($1 / 1048576) / ($2 / 1048576) * 100); }')
+  DISK_SPACE=$(echo "${TMP_VAR}" | awk -F ' ' '{print $1}')
+  DISK_PERC=$(echo "${TMP_VAR}" | awk -F ' ' '{print $2}')
+  # printf("/%.1fGiB\n", $2 / 1048576); }'
+}
+
+disk
+if [[ "$1" = "perc" ]]; then
+	echo "${DISK_PERC}"
+elif [[ "$BLOCK_INSTANCE" = "space" ]]; then
+	echo "💽  ${DISK_SPACE}"
+else
+	echo "Bruh"
+fi

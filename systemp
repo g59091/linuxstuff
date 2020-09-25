@@ -1,0 +1,17 @@
+#!/bin/bash
+blockpath="${HOME}/.config/i3blocks/i3blcks/blocks"
+OUTPUT="⚙️"
+
+case $BLOCK_BUTTON in
+  1) echo "yes" > $blockpath/systempclick.dat ;;
+  3) echo "no" > $blockpath/systempclick.dat ;;
+esac
+
+varchk=$(cat $blockpath/systempclick.dat)
+if [[ $varchk == "yes" ]]; then
+  OUTPUT=$(echo "⚙️ C: $($blockpath/cpu) @ $(sensors | grep 'CPUTIN' | awk -F' +' '{print $2}' | cut -c 2-) G: $(echo "scale=3;$(nvidia-smi --query-gpu=memory.used --format=csv,noheader | awk '{print $1}') / $(nvidia-smi --query-gpu=memory.total --format=csv,noheader | awk '{print $1}') * 100" | bc | grep -o '^[0-9]*\.[0-9]' | awk '{print $1"%"}') @ $(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader)°C H: $($blockpath/space perc) @ $(sudo hddtemp /dev/sdb4 | tail -c 6)")
+elif [[ $varchk == "no" ]]; then
+  OUTPUT="⚙️"    
+fi
+
+echo "$OUTPUT"

@@ -1,0 +1,94 @@
+#!/bin/bash
+# Based on http://openweathermap.org/current
+
+API_KEY="2227cd6ab2eff7eaa69d046131534c76"
+
+# Check on http://openweathermap.org/find
+HOUR_NOW="$(date +"%H")"
+
+URGENT_LOWER_C=0
+URGENT_HIGHER_C=35
+
+ICON_SUNNY="☀️"
+ICON_CLOUDY="🌥️"
+ICON_RAINY="🌧️"
+ICON_STORM="⛈️"
+ICON_SNOW="🌨️"
+ICON_FOG="🌫️"
+ICON_HUMD="💧"
+ICON_RAIN="☂️"
+
+SYMBOL_C="°C"
+SYMBOL_F="°F"
+
+weather(){
+  if [[ $(timeout 10 curl -s https://ipinfo.io/ip) ]]; then
+    PUBLIC_IP=$(curl -s https://ipinfo.io/ip)
+  else
+    echo "☀️ Weather N/A."
+    return
+  fi
+
+  OUTPUT_VAR=$(curl -s https://ipvigilante.com/${PUBLIC_IP} | jq '.data.latitude, .data.longitude' | tr -d '"')
+  GLAT=$(echo ${OUTPUT_VAR} | awk -F ' ' '{print $1}')
+  GLONG=$(echo ${OUTPUT_VAR} | awk -F ' ' '{print $2}')
+
+  # Later, program this to check based on instance city
+  if [[ ! -z $BLOCK_INSTANCE ]]; then
+    GLAT=$(echo "28.597296")
+    GLONG=$(echo "-81.203127")
+  fi
+
+  WEATHER_URL="https://api.openweathermap.org/data/2.5/onecall?lat=${GLAT}&lon=${GLONG}&exclude=minutely,hourly&appid=${API_KEY}&units=metric"
+  WEATHER_INFO=$(wget -qO- "${WEATHER_URL}")
+  WEATHER_MAIN=$(echo "${WEATHER_INFO}" | jq '.current.weather[0].main' | tr -d '"')
+  WEATHER_TEMP_C=$(echo "${WEATHER_INFO}" | jq '.current.temp' | tr -d '"')
+  WEATHER_TEMP_F=$(printf "%.0f" $(echo "scale=2;((9/5) * ${WEATHER_TEMP_C}) + 32" | bc))
+  WEATHER_TEMP_C=$(echo "scale=1;${WEATHER_TEMP_C} * 1 / 1" | bc)
+  WEATHER_HUMD=$(echo "${WEATHER_INFO}" | jq '.current.humidity' | tr -d '"')
+  WEATHER_RAIN=$(echo "${WEATHER_INFO}" | jq '.daily[0].pop' | tr -d '"' | sed 's/$/*100\/1/' | bc)
+
+  WEATHER_MSG0="${WEATHER_TEMP_C}${SYMBOL_C}/${WEATHER_TEMP_F}${SYMBOL_F}"
+  WEATHER_MSG="${WEATHER_MSG0} ${ICON_HUMD} ${WEATHER_HUMD}% ${ICON_RAIN} ${WEATHER_RAIN}%"
+  
+  if [[ "$HOUR_NOW" -gt 19 ]] || [[ "$HOUR_NOW" -lt 7 ]]; then
+    ICON_SUNNY="🌙"
+    ICON_CLOUDY="☁️"
+  fi
+  
+  if [[ "${WEATHER_MAIN}" = *Snow* ]]; then
+    echo "${ICON_SNOW} ${WEATHER_MSG}"
+    echo "${ICON_SNOW} ${WEATHER_MSG}"
+    echo ""
+  elif [[ "${WEATHER_MAIN}" = *Rain* ]] || [[ "${WEATHER_MAIN}" = *Drizzle* ]]; then
+    echo "${ICON_RAINY} ${WEATHER_MSG}"
+    echo "${ICON_RAINY} ${WEATHER_MSG}"
+    echo ""
+  elif [[ "${WEATHER_MAIN}" = *Thunderstorm* ]]; then
+    echo "${ICON_STORM} ${WEATHER_MSG}"
+    echo "${ICON_STORM} ${WEATHER_MSG}"
+    echo ""
+  elif [[ "${WEATHER_MAIN}" = *Cloud* ]]; then
+    echo "${ICON_CLOUDY} ${WEATHER_MSG}"
+    echo "${ICON_CLOUDY} ${WEATHER_MSG}"
+    echo ""
+  elif [[ "${WEATHER_MAIN}" = *Clear* ]]; then
+    echo "${ICON_SUNNY} ${WEATHER_MSG}"
+    echo "${ICON_SUNNY} ${WEATHER_MSG}"
+    echo ""
+  elif [[ "${WEATHER_MAIN}" = *Fog* ]] || [[ "${WEATHER_MAIN}" = *Mist* ]]; then
+    echo "${ICON_FOG} ${WEATHER_MSG}"
+    echo "${ICON_FOG} ${WEATHER_MSG}"
+    echo ""
+  else
+    echo "${WEATHER_MAIN} ${WEATHER_MSG}"
+    echo "${WEATHER_MAIN} ${WEATHER_MSG}"
+    echo ""
+  fi
+  return
+}
+weather
+
+if [[ "${WEATHER_TEMP_C}" -lt "${URGENT_LOWER_C}" ]] || [[ "${WEATHER_TEMP_C}" -gt "${URGENT_HIGHER_C}" ]]; then
+  exit 33
+fi

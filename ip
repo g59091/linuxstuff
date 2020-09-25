@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ $(timeout 10 wget -qO - icanhazip.com) ]]; then
+  echo "🌐  $(wget -qO - icanhazip.com)"
+else
+  echo "🌐  Internet down."
+fi

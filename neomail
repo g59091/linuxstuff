@@ -1,0 +1,12 @@
+#!/bin/bash
+set -m
+case $BLOCK_BUTTON in
+  1) urxvt -e neomutt ;;
+esac
+
+# [[ $(ps aux | grep mailsync | wc -l) -gt 1 ]] && echo "yes" > ${HOME}/.config/i3blocks/i3blcks/blocks/neomailupdate.dat
+mailsync > /dev/null
+# [[ $(cat ${HOME}/.config/i3blocks/i3blcks/blocks/neomailupdate.dat) -eq "yes" ]] && emoji="🔃"
+emoji=""
+mailcount=$(find $HOME/.local/share/mail -iwholename '*/Inbox/new/*' | wc -l)
+[[ $mailcount -gt 0 ]] && echo "📬 $mailcount new. $emoji" || echo "📬 $emoji"
